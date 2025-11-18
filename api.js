@@ -1,4 +1,4 @@
-const API_URL = "http://5.189.131.28:80"; // CHANGE ME
+const API_URL = ""; // CHANGE ME
 
 function api(url, method = "GET", data = null) {
     const token = localStorage.getItem("jwt");
