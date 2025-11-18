@@ -21,6 +21,6 @@ function api(url, method = "GET", data = null) {
 
 function requireAuth() {
     if (!localStorage.getItem("jwt")) {
-        window.location.href = "login.html";
+        window.location.href = "/login";
     }
 }

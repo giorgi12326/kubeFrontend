@@ -22,7 +22,7 @@
                     console.log(res);
                     console.log(res.accessToken)
                     localStorage.setItem("jwt", res.accessToken);
-                    window.location.href = "products.html";
+                    window.location.href = "/products";
                 })
                 .catch(e => alert("Login failed"));
         }
