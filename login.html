@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <script src="api.js"></script>
+</head>
+<body>
+    <h2>Login</h2>
+
+    <input id="username" placeholder="username"><br>
+    <input id="password" type="password" placeholder="password"><br>
+
+    <button onclick="login()">Login</button>
+
+    <script>
+        function login() {
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+
+            api("/user/api/auth/login", "POST", { username, password })
+                .then(res => {
+                    console.log(res);
+                    console.log(res.accessToken)
+                    localStorage.setItem("jwt", res.accessToken);
+                    window.location.href = "products.html";
+                })
+                .catch(e => alert("Login failed"));
+        }
+    </script>
+</body>
+</html>

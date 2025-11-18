@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Users</title>
+    <script src="api.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body onload="loadUsers()">
+
+<h2>Users</h2>
+<button onclick="logout()">Logout</button>
+
+<h3>Add User</h3>
+<input id="username" placeholder="Username">
+<input id="password" type="password" placeholder="Password">
+<input id="role" placeholder="Role">
+<button onclick="addUser()">Add</button>
+
+<h3>User List</h3>
+<table id="userTable">
+    <tr>
+        <th>Username</th>
+        <th>Role</th>
+    </tr>
+</table>
+
+<script>
+function logout() {
+    localStorage.removeItem("jwt");
+    window.location.href = "login.html";
+}
+
+function loadUsers() {
+    requireAuth();
+    api("/users")
+        .then(users => {
+            const table = document.getElementById("userTable");
+
+            users.forEach(u => {
+                const row = table.insertRow();
+                row.insertCell().textContent = u.username;
+                row.insertCell().textContent = u.role;
+            });
+        });
+}
+
+function addUser() {
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
+
+    api("/users", "POST", { username, password, role })
+        .then(() => location.reload());
+}
+</script>
+
+</body>
+</html>

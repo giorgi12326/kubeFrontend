@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Orders</title>
+    <script src="api.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body onload="loadOrders()">
+
+<h2>Orders</h2>
+<button onclick="logout()">Logout</button>
+
+<h3>Create Order</h3>
+<input id="userId" type="number" placeholder="User ID">
+<input id="productId" type="number" placeholder="Product ID">
+<button onclick="addOrder()">Create</button>
+
+<h3>Order List</h3>
+<table id="orderTable">
+    <tr>
+        <th>Order ID</th>
+        <th>User ID</th>
+        <th>Product ID</th>
+    </tr>
+</table>
+
+<script>
+function logout() {
+    localStorage.removeItem("jwt");
+    window.location.href = "login.html";
+}
+
+function loadOrders() {
+    requireAuth();
+    api("/order")
+        .then(orders => {
+            const table = document.getElementById("orderTable");
+            orders.forEach(o => {
+                const row = table.insertRow();
+                row.insertCell().textContent = o.id;
+                row.insertCell().textContent = o.userId;
+                row.insertCell().textContent = o.productId;
+            });
+        });
+}
+
+function addOrder() {
+    const userId = Number(document.getElementById("userId").value);
+    const productId = Number(document.getElementById("productId").value);
+
+    api("/order", "POST", { userId, productId })
+        .then(() => location.reload());
+}
+</script>
+
+</body>
+</html>

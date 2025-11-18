@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Products</title>
+    <script src="api.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body onload="loadProducts()">
+
+<h2>Products</h2>
+<button onclick="logout()">Logout</button>
+
+<h3>Add Product</h3>
+<input id="name" placeholder="Name">
+<input id="description" placeholder="Description">
+<button onclick="addProduct()">Add</button>
+
+<h3>Product List</h3>
+<table id="productTable">
+    <tr>
+        <th>Name</th>
+        <th>Description</th>
+        <th>Created At</th>
+    </tr>
+</table>
+
+<script>
+function logout() {
+    localStorage.removeItem("jwt");
+    window.location.href = "login.html";
+}
+
+function loadProducts() {
+    requireAuth();
+    api("/product/api")
+        .then(products => {
+            const table = document.getElementById("productTable");
+
+            products.forEach(p => {
+                const row = table.insertRow();
+                row.insertCell().textContent = p.name;
+                row.insertCell().textContent = p.description ?? "";
+                row.insertCell().textContent = p.createdAt ?? "";
+            });
+        });
+}
+
+function addProduct() {
+    const name = document.getElementById("name").value;
+    const description = document.getElementById("description").value;
+
+    api("/product/api", "POST", { name, description })
+        .then(() => location.reload());
+}
+</script>
+
+</body>
+</html>
