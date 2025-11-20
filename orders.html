@@ -21,6 +21,7 @@
         <th>Order ID</th>
         <th>User ID</th>
         <th>Product ID</th>
+        <th>Total price</th>
     </tr>
 </table>
 
@@ -39,7 +40,8 @@ function loadOrders() {
                 const row = table.insertRow();
                 row.insertCell().textContent = o.id;
                 row.insertCell().textContent = o.userId;
-                row.insertCell().textContent = o.productId;
+                row.insertCell().textContent = o.productIds;
+                row.insertCell().textContent = o.totalPrice;
             });
         });
 }
