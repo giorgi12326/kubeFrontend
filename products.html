@@ -20,6 +20,7 @@
     <tr>
         <th>Name</th>
         <th>Description</th>
+        <th>Price</th>
         <th>Created At</th>
     </tr>
 </table>
@@ -39,7 +40,8 @@ function loadProducts() {
             products.forEach(p => {
                 const row = table.insertRow();
                 row.insertCell().textContent = p.name;
-                row.insertCell().textContent = p.description ?? "";
+                row.insertCell().textContent = p.description ?? ""
+                row.insertCell().textContent = p.price ?? "";;
                 row.insertCell().textContent = p.createdAt ?? "";
             });
         });
