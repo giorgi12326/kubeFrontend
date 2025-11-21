@@ -40,7 +40,7 @@ function loadOrders() {
                 const row = table.insertRow();
                 row.insertCell().textContent = o.id;
                 row.insertCell().textContent = o.userId;
-                row.insertCell().textContent = o.productIds;
+                row.insertCell().textContent = o.productIds.join(", ");;
                 row.insertCell().textContent = o.totalPrice;
             });
         });
