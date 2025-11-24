@@ -13,6 +13,8 @@
 <h3>Create Order</h3>
 <input id="userId" type="number" placeholder="User ID">
 <input id="productId" type="number" placeholder="Product ID">
+<input id="quantity" type="number" placeholder="Quantity">
+<input id="price" type="number" placeholder="Price">
 <button onclick="addOrder()">Create</button>
 
 <h3>Order List</h3>
@@ -20,8 +22,11 @@
     <tr>
         <th>Order ID</th>
         <th>User ID</th>
-        <th>Product ID</th>
-        <th>Total price</th>
+        <th>Status</th>
+        <th>Created At</th>
+        <th>Updated At</th>
+        <th>Items</th>
+        <th>Total Amount</th>
     </tr>
 </table>
 
@@ -36,12 +41,31 @@ function loadOrders() {
     api("/order/api")
         .then(orders => {
             const table = document.getElementById("orderTable");
+            table.innerHTML = `<tr>
+                <th>Order ID</th>
+                <th>User ID</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Items</th>
+                <th>Total Amount</th>
+            </tr>`; // reset table
+
             orders.forEach(o => {
                 const row = table.insertRow();
                 row.insertCell().textContent = o.id;
                 row.insertCell().textContent = o.userId;
-                row.insertCell().textContent = o.productIds.join(", ");;
-                row.insertCell().textContent = o.totalPrice;
+                row.insertCell().textContent = o.status;
+                row.insertCell().textContent = o.creationDate;
+                row.insertCell().textContent = o.updatedAt || "-";
+
+                // Display all items
+                const itemsCell = row.insertCell();
+                itemsCell.innerHTML = o.orderItems.map(i =>
+                    `Product ${i.productId}: ${i.quantity} x $${i.price.toFixed(2)}`
+                ).join("<br>");
+
+                row.insertCell().textContent = o.amount.toFixed(2);
             });
         });
 }
@@ -49,9 +73,18 @@ function loadOrders() {
 function addOrder() {
     const userId = Number(document.getElementById("userId").value);
     const productId = Number(document.getElementById("productId").value);
+    const quantity = Number(document.getElementById("quantity").value);
+    const price = Number(document.getElementById("price").value);
 
-    api("/order/api", "POST", { userId, productId })
-        .then(() => location.reload());
+    const orderData = {
+        userId,
+        orderItems: [
+            { productId, quantity, price }
+        ]
+    };
+
+    api("/order/api", "POST", orderData)
+        .then(() => loadOrders());
 }
 </script>
 
