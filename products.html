@@ -49,8 +49,9 @@ function loadProducts() {
                 row.insertCell().textContent = p.description ?? "";
                 row.insertCell().textContent = p.price ?? "";
                 row.insertCell().textContent = p.quantity ?? "";
-                row.insertCell().textContent = p.createdAt ?? "";
                 row.insertCell().textContent = p.userId ?? "";
+                row.insertCell().textContent = p.createdAt ?? "";
+
             });
         });
 }
