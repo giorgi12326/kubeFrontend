@@ -41,6 +41,7 @@ function loadOrders() {
     api("/order/api")
         .then(orders => {
             const table = document.getElementById("orderTable");
+            // Reset table with headers
             table.innerHTML = `<tr>
                 <th>Order ID</th>
                 <th>Items</th>
@@ -49,7 +50,7 @@ function loadOrders() {
                 <th>Created At</th>
                 <th>Updated At</th>
                 <th>User ID</th>
-            </tr>`; // reset table
+            </tr>`;
 
             orders.forEach(o => {
                 const row = table.insertRow();
@@ -64,13 +65,17 @@ function loadOrders() {
 
                 row.insertCell().textContent = o.status;              // Status
                 row.insertCell().textContent = o.amount.toFixed(2);   // Total Amount
-                row.insertCell().textContent = o.createdAt || "-";    // Created At
-                row.insertCell().textContent = o.updatedAt || "-";    // Updated At
-                row.insertCell().textContent = o.userId;             // User ID
+
+                // Format createdAt and updatedAt nicely
+                const created = o.createdAt ? new Date(o.createdAt).toLocaleString() : "-";
+                const updated = o.updatedAt ? new Date(o.updatedAt).toLocaleString() : "-";
+
+                row.insertCell().textContent = created;  // Created At
+                row.insertCell().textContent = updated;  // Updated At
+                row.insertCell().textContent = o.userId; // User ID
             });
         });
 }
-
 
 function addOrder() {
     const userId = Number(document.getElementById("userId").value);
