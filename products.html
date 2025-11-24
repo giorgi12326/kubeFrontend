@@ -13,14 +13,20 @@
 <h3>Add Product</h3>
 <input id="name" placeholder="Name">
 <input id="description" placeholder="Description">
+<input id="price" type="number" step="0.01" placeholder="Price">
+<input id="quantity" type="number" placeholder="Quantity">
+<input id="userId" type="number" placeholder="User ID">
 <button onclick="addProduct()">Add</button>
 
 <h3>Product List</h3>
 <table id="productTable">
     <tr>
+        <th>ID</th>
         <th>Name</th>
         <th>Description</th>
         <th>Price</th>
+        <th>Quantity</th>
+        <th>User ID</th>
         <th>Created At</th>
     </tr>
 </table>
@@ -36,12 +42,14 @@ function loadProducts() {
     api("/product/api")
         .then(products => {
             const table = document.getElementById("productTable");
-
             products.forEach(p => {
                 const row = table.insertRow();
-                row.insertCell().textContent = p.name;
-                row.insertCell().textContent = p.description ?? ""
-                row.insertCell().textContent = p.price ?? "";;
+                row.insertCell().textContent = p.id ?? "";
+                row.insertCell().textContent = p.name ?? "";
+                row.insertCell().textContent = p.description ?? "";
+                row.insertCell().textContent = p.price ?? "";
+                row.insertCell().textContent = p.quantity ?? "";
+                row.insertCell().textContent = p.userId ?? "";
                 row.insertCell().textContent = p.createdAt ?? "";
             });
         });
@@ -50,8 +58,11 @@ function loadProducts() {
 function addProduct() {
     const name = document.getElementById("name").value;
     const description = document.getElementById("description").value;
+    const price = parseFloat(document.getElementById("price").value);
+    const quantity = parseInt(document.getElementById("quantity").value);
+    const userId = parseInt(document.getElementById("userId").value);
 
-    api("/product/api", "POST", { name, description })
+    api("/product/api", "POST", { name, description, price, quantity, userId })
         .then(() => location.reload());
 }
 </script>
