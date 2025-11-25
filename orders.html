@@ -4,6 +4,10 @@
     <title>Orders</title>
     <script src="api.js"></script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .product-row { margin-bottom: 5px; }
+        .product-row input { margin-right: 5px; }
+    </style>
 </head>
 <body onload="loadOrders()">
 
@@ -11,11 +15,16 @@
 <button onclick="logout()">Logout</button>
 
 <h3>Create Order</h3>
-<input id="userId" type="number" placeholder="User ID">
-<input id="productId" type="number" placeholder="Product ID">
-<input id="quantity" type="number" placeholder="Quantity">
-<input id="price" type="number" placeholder="Price">
-<button onclick="addOrder()">Create</button>
+
+<div id="productsContainer">
+    <div class="product-row">
+        <input type="number" placeholder="Product ID" class="productId">
+        <input type="number" placeholder="Quantity" class="quantity">
+        <button type="button" onclick="removeProductRow(this)">Remove</button>
+    </div>
+</div>
+<button type="button" onclick="addProductRow()">Add Another Product</button>
+<button onclick="addOrder()">Create Order</button>
 
 <h3>Order List</h3>
 <table id="orderTable">
@@ -26,7 +35,6 @@
         <th>Total Amount</th>
         <th>Created At</th>
         <th>Updated At</th>
-        <th>User ID</th>
     </tr>
 </table>
 
@@ -36,12 +44,28 @@ function logout() {
     window.location.href = "/login";
 }
 
+function addProductRow() {
+    const container = document.getElementById("productsContainer");
+    const div = document.createElement("div");
+    div.className = "product-row";
+    div.innerHTML = `
+        <input type="number" placeholder="Product ID" class="productId">
+        <input type="number" placeholder="Quantity" class="quantity">
+        <button type="button" onclick="removeProductRow(this)">Remove</button>
+    `;
+    container.appendChild(div);
+}
+
+function removeProductRow(btn) {
+    btn.parentElement.remove();
+}
+
 function loadOrders() {
     requireAuth();
     api("/order/api")
         .then(orders => {
             const table = document.getElementById("orderTable");
-            // Reset table with headers
+            // Reset table
             table.innerHTML = `<tr>
                 <th>Order ID</th>
                 <th>Items</th>
@@ -49,7 +73,6 @@ function loadOrders() {
                 <th>Total Amount</th>
                 <th>Created At</th>
                 <th>Updated At</th>
-                <th>User ID</th>
             </tr>`;
 
             orders.forEach(o => {
@@ -57,41 +80,55 @@ function loadOrders() {
 
                 row.insertCell().textContent = o.id; // Order ID
 
-                // Items
+                // Items with productName, description, quantity
                 const itemsCell = row.insertCell();
                 itemsCell.innerHTML = o.orderItems.map(i =>
-                    `Product ${i.productId}: ${i.quantity} x $${i.price.toFixed(2)}`
-                ).join("<br>");
+                    `Product: ${i.productName} <br>
+                     Description: ${i.productDescription} <br>
+                     Quantity: ${i.quantity}`
+                ).join("<hr>");
 
                 row.insertCell().textContent = o.status;              // Status
                 row.insertCell().textContent = o.amount.toFixed(2);   // Total Amount
 
-                // Format createdAt and updatedAt nicely
                 const created = o.createdAt ? new Date(o.createdAt).toLocaleString() : "-";
                 const updated = o.updatedAt ? new Date(o.updatedAt).toLocaleString() : "-";
 
                 row.insertCell().textContent = created;  // Created At
                 row.insertCell().textContent = updated;  // Updated At
-                row.insertCell().textContent = o.userId; // User ID
             });
         });
 }
 
 function addOrder() {
-    const userId = Number(document.getElementById("userId").value);
-    const productId = Number(document.getElementById("productId").value);
-    const quantity = Number(document.getElementById("quantity").value);
-    const price = Number(document.getElementById("price").value);
+    const productRows = document.querySelectorAll(".product-row");
+    const orderItems = [];
 
-    const orderData = {
-        userId,
-        orderItems: [
-            { productId, quantity, price }
-        ]
-    };
+    productRows.forEach(row => {
+        const productId = Number(row.querySelector(".productId").value);
+        const quantity = Number(row.querySelector(".quantity").value);
+        if (productId && quantity) {
+            orderItems.push({ productId, quantity });
+        }
+    });
 
-    api("/order/api", "POST", orderData)
-        .then(() => loadOrders());
+    if (orderItems.length === 0) {
+        alert("Please add at least one product with quantity.");
+        return;
+    }
+
+    api("/order/api", "POST", { orderItems })
+        .then(() => {
+            // Reset form
+            document.getElementById("productsContainer").innerHTML = `
+                <div class="product-row">
+                    <input type="number" placeholder="Product ID" class="productId">
+                    <input type="number" placeholder="Quantity" class="quantity">
+                    <button type="button" onclick="removeProductRow(this)">Remove</button>
+                </div>
+            `;
+            loadOrders();
+        });
 }
 </script>
 
