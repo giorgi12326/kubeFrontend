@@ -85,8 +85,8 @@ function loadOrders() {
                 itemsCell.innerHTML = o.orderItems.map(i =>
                     `Product: ${i.productName} <br>
                      Description: ${i.productDescription} <br>
-                     Price: ${i.price}
-                     Quantity: ${i.quantity}<br>`
+                     Price: ${i.price}<br>
+                     Quantity: ${i.quantity}`
                 ).join("<hr>");
 
                 row.insertCell().textContent = o.status;              // Status
