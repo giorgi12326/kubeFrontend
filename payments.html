@@ -61,12 +61,11 @@ function loadPayments() {
 }
 
 function addPayment() {
-    const id = document.getElementById("id").value;
     const amount = parseFloat(document.getElementById("amount").value);
     const paymentMethod = document.getElementById("paymentMethod").value;
     const orderID = parseInt(document.getElementById("orderId").value);
 
-    api("/payment/api", "POST", { id, amount, paymentMethod, orderID })
+    api("/payment/api", "POST", {amount, paymentMethod, orderID })
         .then(() => location.reload());
 }
 </script>
