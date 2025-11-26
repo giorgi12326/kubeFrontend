@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Payments</title>
+    <script src="api.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body onload="loadPayments()">
+
+<h2>Payments</h2>
+<button onclick="logout()" style="right:10px;">Logout</button>
+
+<nav>
+    <a href="/payments">Payments</a>
+    <a href="/orders">Orders</a>
+</nav>
+<br>
+
+<h3>Add Payment</h3>
+<input id="id" placeholder="ID">
+<input id="amount" type="number" step="0.01" placeholder="Amount">
+<input id="paymentMethod" placeholder="Payment Method">
+<input id="orderId" type="number" placeholder="Order ID">
+<button onclick="addPayment()">Add</button>
+
+<h3>Payment List</h3>
+<table id="paymentTable">
+    <tr>
+        <th>ID</th>
+        <th>Amount</th>
+        <th>Payment Method</th>
+        <th>Order ID</th>
+        <th>User ID</th>
+        <th>Created At</th>
+    </tr>
+</table>
+
+<script>
+function logout() {
+    localStorage.removeItem("jwt");
+    window.location.href = "/login";
+}
+
+function loadPayments() {
+    requireAuth();
+    api("/payment/api")
+        .then(payments => {
+            const table = document.getElementById("paymentTable");
+            payments.forEach(p => {
+                const row = table.insertRow();
+                row.insertCell().textContent = p.id ?? "";
+                row.insertCell().textContent = p.amount ?? "";
+                row.insertCell().textContent = p.paymentMethod ?? "";
+                row.insertCell().textContent = p.orderID ?? "";
+                row.insertCell().textContent = p.userId ?? "";
+                row.insertCell().textContent = p.createdAt ?? "";
+            });
+        });
+}
+
+function addPayment() {
+    const id = document.getElementById("id").value;
+    const amount = parseFloat(document.getElementById("amount").value);
+    const paymentMethod = document.getElementById("paymentMethod").value;
+    const orderID = parseInt(document.getElementById("orderId").value);
+
+    api("/payment/api", "POST", { id, amount, paymentMethod, orderID })
+        .then(() => location.reload());
+}
+</script>
+
+</body>
+</html>
