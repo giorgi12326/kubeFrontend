@@ -18,7 +18,6 @@
 <br>
 
 <h3>Add Payment</h3>
-<input id="amount" type="number" step="0.01" placeholder="Amount">
 <select id="paymentMethod" style="height:36px;">
     <option value="CARD" selected>Card</option>
     <option value="PAYPAL">PayPal</option>
@@ -63,11 +62,10 @@
     }
 
     function addPayment() {
-        const amount = parseFloat(document.getElementById("amount").value);
         const paymentMethod = document.getElementById("paymentMethod").value;
         const orderId = parseInt(document.getElementById("orderId").value);
         
-        api("/payment/api", "POST", { amount, paymentMethod, orderId })
+        api("/payment/api", "POST", {paymentMethod, orderId })
         .then(() => location.reload());
     }
 </script>
