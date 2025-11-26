@@ -7,9 +7,8 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body onload="loadPayments()">
-
-<h2>Payments</h2>
-<button onclick="logout()" style="right:10px;">Logout</button>
+    <h2>Payments</h2>
+    <button onclick="logout()" style="right:10px;">Logout</button>
 
 <nav>
     <a href="/products">Products</a>
@@ -20,7 +19,11 @@
 
 <h3>Add Payment</h3>
 <input id="amount" type="number" step="0.01" placeholder="Amount">
-<input id="paymentMethod" placeholder="Payment Method">
+<select id="paymentMethod" style="height:36px;">
+    <option value="CARD" selected>Card</option>
+    <option value="PAYPAL">PayPal</option>
+    <option value="CASH">Cash</option>
+</select>
 <input id="orderId" type="number" placeholder="Order ID">
 <button onclick="addPayment()">Add</button>
 
@@ -37,14 +40,14 @@
 </table>
 
 <script>
-function logout() {
-    localStorage.removeItem("jwt");
-    window.location.href = "/login";
-}
+    function logout() {
+        localStorage.removeItem("jwt");
+        window.location.href = "/login";
+    }
 
-function loadPayments() {
-    requireAuth();
-    api("/payment/api")
+    function loadPayments() {
+        requireAuth();
+        api("/payment/api")
         .then(payments => {
             const table = document.getElementById("paymentTable");
             payments.forEach(p => {
@@ -57,16 +60,16 @@ function loadPayments() {
                 row.insertCell().textContent = p.createdAt ?? "";
             });
         });
-}
+    }
 
-function addPayment() {
-    const amount = parseFloat(document.getElementById("amount").value);
-    const paymentMethod = document.getElementById("paymentMethod").value;
-    const orderId = parseInt(document.getElementById("orderId").value);
-
-    api("/payment/api", "POST", {amount, paymentMethod, orderId })
+    function addPayment() {
+        const amount = parseFloat(document.getElementById("amount").value);
+        const paymentMethod = document.getElementById("paymentMethod").value;
+        const orderId = parseInt(document.getElementById("orderId").value);
+        
+        api("/payment/api", "POST", { amount, paymentMethod, orderId })
         .then(() => location.reload());
-}
+    }
 </script>
 
 </body>
