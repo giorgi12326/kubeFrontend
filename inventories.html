@@ -36,7 +36,7 @@ function logout() {
 
 function loadInventories() {
     requireAuth();
-    api("/inventory/api/product")
+    api("/inventory/api/inventory")
         .then(inventories => {
             const container = document.getElementById("inventoryContainer");
             inventories.forEach(inv => {
