@@ -1,32 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Inventory</title>
+    <title>Inventories</title>
     <script src="api.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body onload="loadInventories()">
 
-<h2>Inventory</h2>
-<button onclick="logout()" style="right:10px;">Logout</button>
+<h2>Inventory Management</h2>
+<button onclick="logout()" style="float:right;">Logout</button>
 
 <nav>
     <a href="/inventory">Inventory</a>
     <a href="/products">Products</a>
     <a href="/orders">Orders</a>
 </nav>
-
 <br>
 
-<h3>Add Inventory</h3>
-<select id="location">
-    <option value="DISTRICT_A">District A</option>
-    <option value="DISTRICT_B">District B</option>
-    <option value="DISTRICT_C">District C</option>
-    <option value="DISTRICT_D">District D</option>
-</select>
-<button onclick="addInventory()">Add Inventory</button>
+<h3>Add Product</h3>
+<select id="inventorySelect"></select>
+<input type="number" id="productId" placeholder="Product ID">
+<input type="number" id="quantity" placeholder="Quantity">
+<button onclick="addProduct()">Add Product</button>
 
 <h3>Inventory List</h3>
 <table id="inventoryTable">
@@ -36,12 +31,10 @@
         <th>Created At</th>
         <th>Updated At</th>
         <th>Products</th>
-        <th>Add Item</th>
     </tr>
 </table>
 
 <script>
-
 function logout() {
     localStorage.removeItem("jwt");
     window.location.href = "/login";
@@ -49,58 +42,61 @@ function logout() {
 
 function loadInventories() {
     requireAuth();
-
-    api("/inventory/api")
+    api("/inventory/api/inventory")  // returns List<InventoryResponseDTO>
         .then(inventories => {
             const table = document.getElementById("inventoryTable");
+            const select = document.getElementById("inventorySelect");
+            table.innerHTML = `
+                <tr>
+                    <th>ID</th>
+                    <th>Location</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
+                    <th>Products</th>
+                </tr>
+            `;
+            select.innerHTML = '';
 
             inventories.forEach(inv => {
+                // Fill table
                 const row = table.insertRow();
-
                 row.insertCell().textContent = inv.id ?? "";
                 row.insertCell().textContent = inv.location ?? "";
                 row.insertCell().textContent = inv.createdAt ?? "";
                 row.insertCell().textContent = inv.updatedAt ?? "";
 
-                // Product list cell
-                const productCell = row.insertCell();
-                if (inv.productId && inv.productId.length > 0) {
-                    inv.productId.forEach(pi => {
+                const productsCell = row.insertCell();
+                if (inv.products && inv.products.length > 0) {
+                    inv.products.forEach(p => {
                         const div = document.createElement("div");
-                        div.textContent = "Product ID: " + pi.productId + " | Qty: " + pi.quantity;
-                        productCell.appendChild(div);
+                        div.textContent = `Product ID: ${p.productId} | Qty: ${p.quantity}`;
+                        productsCell.appendChild(div);
                     });
                 } else {
-                    productCell.textContent = "No items";
+                    productsCell.textContent = "No products";
                 }
 
-                // Add ProductInfo form
-                const addCell = row.insertCell();
-                addCell.innerHTML = `
-                    <input placeholder="Product ID" id="p${inv.id}_id" type="number" />
-                    <input placeholder="Quantity" id="p${inv.id}_qty" type="number" />
-                    <button onclick="addItem(${inv.id})">Add</button>
-                `;
+                // Fill select dropdown
+                const option = document.createElement("option");
+                option.value = inv.id;
+                option.textContent = `Inventory ${inv.id} (${inv.location})`;
+                select.appendChild(option);
             });
         });
 }
 
+function addProduct() {
+    const inventoryId = parseInt(document.getElementById("inventorySelect").value);
+    const productId = parseInt(document.getElementById("productId").value);
+    const quantity = parseInt(document.getElementById("quantity").value);
 
-function addInventory() {
-    const location = document.getElementById("location").value;
-
-    api("/inventory/api", "POST", { location })
-        .then(() => location.reload());
+    api("/inventory/api/product", "POST", { inventoryId, productId, quantity })
+        .then(() => {
+            document.getElementById("productId").value = '';
+            document.getElementById("quantity").value = '';
+            loadInventories();
+        });
 }
-
-function addItem(inventoryId) {
-    const productId = parseInt(document.getElementById(`p${inventoryId}_id`).value);
-    const quantity = parseInt(document.getElementById(`p${inventoryId}_qty`).value);
-
-    api(`/inventory/${inventoryId}/items`, "POST", { productId, quantity })
-        .then(() => location.reload());
-}
-
 </script>
 
 </body>
