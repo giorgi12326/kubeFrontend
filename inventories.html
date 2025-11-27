@@ -5,30 +5,24 @@
     <script src="api.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        table.nested { margin-top: 5px; }
-        table.nested th, table.nested td { border: 1px solid #aaa; padding: 4px; font-size: 0.9em; }
+        .product-list { display: none; margin-top: 5px; }
+        .product-list.visible { display: block; }
+        .inventory-row { cursor: pointer; }
+        .add-product-btn { margin-left: 10px; }
     </style>
 </head>
 <body onload="loadInventories()">
 
-<h2>Inventory Management</h2>
+<h2>Inventories</h2>
 <button onclick="logout()" style="float:right;">Logout</button>
 
 <nav>
-    <a href="/inventory">Inventory</a>
     <a href="/products">Products</a>
     <a href="/orders">Orders</a>
+    <a href="/payments">Payments</a>
+    <a href="/inventories">Inventory</a>
 </nav>
 <br>
-
-<h3>Add Product</h3>
-<select id="inventorySelect"></select>
-<input type="number" id="productId" placeholder="Product ID">
-<input type="number" id="quantity" placeholder="Quantity">
-<button onclick="addProduct()">Add Product</button>
 
 <h3>Inventory List</h3>
 <table id="inventoryTable">
@@ -38,6 +32,7 @@
         <th>Created At</th>
         <th>Updated At</th>
         <th>Products</th>
+        <th>Actions</th>
     </tr>
 </table>
 
@@ -49,75 +44,65 @@ function logout() {
 
 function loadInventories() {
     requireAuth();
-
-    api("/inventory/api") // returns List<InventoryResponseDTO>
+    api("/inventory/api/inventory")
         .then(inventories => {
             const table = document.getElementById("inventoryTable");
-            const select = document.getElementById("inventorySelect");
-            table.innerHTML = `
-                <tr>
-                    <th>ID</th>
-                    <th>Location</th>
-                    <th>Created At</th>
-                    <th>Updated At</th>
-                    <th>Products</th>
-                </tr>
-            `;
-            select.innerHTML = '';
-
             inventories.forEach(inv => {
-                // Inventory row
                 const row = table.insertRow();
+                row.classList.add("inventory-row");
+
                 row.insertCell().textContent = inv.id ?? "";
                 row.insertCell().textContent = inv.location ?? "";
                 row.insertCell().textContent = inv.createdAt ?? "";
                 row.insertCell().textContent = inv.updatedAt ?? "";
 
-                // Nested table for products
-                const productsCell = row.insertCell();
+                // Products expandable list
+                const productCell = row.insertCell();
+                const productList = document.createElement("ul");
+                productList.className = "product-list";
                 if (inv.products && inv.products.length > 0) {
-                    const nestedTable = document.createElement("table");
-                    nestedTable.className = "nested";
-                    nestedTable.innerHTML = "<tr><th>Product ID</th><th>Quantity</th></tr>";
-
                     inv.products.forEach(p => {
-                        const innerRow = nestedTable.insertRow();
-                        innerRow.insertCell().textContent = p.productId;
-                        innerRow.insertCell().textContent = p.quantity;
+                        const li = document.createElement("li");
+                        li.textContent = `Product ID: ${p.productId}, Quantity: ${p.quantity}`;
+                        productList.appendChild(li);
                     });
-
-                    productsCell.appendChild(nestedTable);
                 } else {
-                    productsCell.textContent = "No products";
+                    const li = document.createElement("li");
+                    li.textContent = "No products";
+                    productList.appendChild(li);
                 }
+                productCell.appendChild(productList);
 
-                // Fill inventory dropdown
-                const option = document.createElement("option");
-                option.value = inv.id;
-                option.textContent = `Inventory ${inv.id} (${inv.location})`;
-                select.appendChild(option);
+                // Toggle product list on click
+                row.addEventListener("click", () => {
+                    productList.classList.toggle("visible");
+                });
+
+                // Actions cell
+                const actionCell = row.insertCell();
+                const addBtn = document.createElement("button");
+                addBtn.textContent = "Add Product";
+                addBtn.className = "add-product-btn";
+                addBtn.onclick = (e) => {
+                    e.stopPropagation(); // prevent row toggle
+                    const productId = prompt("Enter Product ID:");
+                    const quantity = prompt("Enter Quantity:");
+                    if (productId && quantity) {
+                        addProductToInventory(inv.id, productId, quantity);
+                    }
+                };
+                actionCell.appendChild(addBtn);
             });
         });
 }
 
-function addProduct() {
-    const inventoryId = parseInt(document.getElementById("inventorySelect").value);
-    const productId = parseInt(document.getElementById("productId").value);
-    const quantity = parseInt(document.getElementById("quantity").value);
-
-    if (!inventoryId || !productId || !quantity) {
-        alert("Please fill all fields correctly.");
-        return;
-    }
-
-    console.log({ inventoryId, productId, quantity }); // debug
-
-    api("/inventory/product", "POST", { inventoryId, productId, quantity })
+function addProductToInventory(inventoryId, productId, quantity) {
+    api(`/inventory/api/product`, "POST", {inventoryId, productId, quantity })
         .then(() => {
-            document.getElementById("productId").value = '';
-            document.getElementById("quantity").value = '';
-            loadInventories();
-        });
+            alert("Product added successfully!");
+            location.reload();
+        })
+        .catch(err => alert("Error adding product: " + err));
 }
 </script>
 
