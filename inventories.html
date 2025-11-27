@@ -4,6 +4,13 @@
     <title>Inventories</title>
     <script src="api.js"></script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        table.nested { margin-top: 5px; }
+        table.nested th, table.nested td { border: 1px solid #aaa; padding: 4px; font-size: 0.9em; }
+    </style>
 </head>
 <body onload="loadInventories()">
 
@@ -42,7 +49,8 @@ function logout() {
 
 function loadInventories() {
     requireAuth();
-    api("/inventory/api/inventory")  // returns List<InventoryResponseDTO>
+
+    api("/inventory/api") // returns List<InventoryResponseDTO>
         .then(inventories => {
             const table = document.getElementById("inventoryTable");
             const select = document.getElementById("inventorySelect");
@@ -58,25 +66,32 @@ function loadInventories() {
             select.innerHTML = '';
 
             inventories.forEach(inv => {
-                // Fill table
+                // Inventory row
                 const row = table.insertRow();
                 row.insertCell().textContent = inv.id ?? "";
                 row.insertCell().textContent = inv.location ?? "";
                 row.insertCell().textContent = inv.createdAt ?? "";
                 row.insertCell().textContent = inv.updatedAt ?? "";
 
+                // Nested table for products
                 const productsCell = row.insertCell();
                 if (inv.products && inv.products.length > 0) {
+                    const nestedTable = document.createElement("table");
+                    nestedTable.className = "nested";
+                    nestedTable.innerHTML = "<tr><th>Product ID</th><th>Quantity</th></tr>";
+
                     inv.products.forEach(p => {
-                        const div = document.createElement("div");
-                        div.textContent = `Product ID: ${p.productId} | Qty: ${p.quantity}`;
-                        productsCell.appendChild(div);
+                        const innerRow = nestedTable.insertRow();
+                        innerRow.insertCell().textContent = p.productId;
+                        innerRow.insertCell().textContent = p.quantity;
                     });
+
+                    productsCell.appendChild(nestedTable);
                 } else {
                     productsCell.textContent = "No products";
                 }
 
-                // Fill select dropdown
+                // Fill inventory dropdown
                 const option = document.createElement("option");
                 option.value = inv.id;
                 option.textContent = `Inventory ${inv.id} (${inv.location})`;
@@ -90,7 +105,14 @@ function addProduct() {
     const productId = parseInt(document.getElementById("productId").value);
     const quantity = parseInt(document.getElementById("quantity").value);
 
-    api("/inventory/api/product", "POST", { inventoryId, productId, quantity })
+    if (!inventoryId || !productId || !quantity) {
+        alert("Please fill all fields correctly.");
+        return;
+    }
+
+    console.log({ inventoryId, productId, quantity }); // debug
+
+    api("/inventory/product", "POST", { inventoryId, productId, quantity })
         .then(() => {
             document.getElementById("productId").value = '';
             document.getElementById("quantity").value = '';
