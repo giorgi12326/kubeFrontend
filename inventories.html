@@ -5,10 +5,11 @@
     <script src="api.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
-        .product-list { display: none; margin-top: 5px; }
+        .product-list { display: none; margin-top: 5px; margin-left: 20px; }
         .product-list.visible { display: block; }
-        .inventory-row { cursor: pointer; }
-        .add-product-btn { margin-left: 10px; }
+        .inventory-row { border-bottom: 1px solid #ccc; padding: 5px; }
+        .inventory-header { font-weight: bold; }
+        .add-product-btn { margin-top: 5px; }
     </style>
 </head>
 <body onload="loadInventories()">
@@ -25,16 +26,7 @@
 <br>
 
 <h3>Inventory List</h3>
-<table id="inventoryTable">
-    <tr>
-        <th>ID</th>
-        <th>Location</th>
-        <th>Created At</th>
-        <th>Updated At</th>
-        <th>Products</th>
-        <th>Actions</th>
-    </tr>
-</table>
+<div id="inventoryContainer"></div>
 
 <script>
 function logout() {
@@ -44,20 +36,26 @@ function logout() {
 
 function loadInventories() {
     requireAuth();
-    api("/inventory/api/inventory")
+    api("/inventory/api/product")
         .then(inventories => {
-            const table = document.getElementById("inventoryTable");
+            const container = document.getElementById("inventoryContainer");
             inventories.forEach(inv => {
-                const row = table.insertRow();
-                row.classList.add("inventory-row");
+                const invDiv = document.createElement("div");
+                invDiv.className = "inventory-row";
 
-                row.insertCell().textContent = inv.id ?? "";
-                row.insertCell().textContent = inv.location ?? "";
-                row.insertCell().textContent = inv.createdAt ?? "";
-                row.insertCell().textContent = inv.updatedAt ?? "";
+                // Inventory header
+                const header = document.createElement("div");
+                header.className = "inventory-header";
+                header.textContent = `ID: ${inv.id} | Location: ${inv.location} | Created: ${inv.createdAt} | Updated: ${inv.updatedAt}`;
+                invDiv.appendChild(header);
 
-                // Products expandable list
-                const productCell = row.insertCell();
+                // Toggle products button
+                const toggleBtn = document.createElement("button");
+                toggleBtn.textContent = "Show Products";
+                toggleBtn.style.marginTop = "5px";
+                invDiv.appendChild(toggleBtn);
+
+                // Products list
                 const productList = document.createElement("ul");
                 productList.className = "product-list";
                 if (inv.products && inv.products.length > 0) {
@@ -71,27 +69,27 @@ function loadInventories() {
                     li.textContent = "No products";
                     productList.appendChild(li);
                 }
-                productCell.appendChild(productList);
+                invDiv.appendChild(productList);
 
-                // Toggle product list on click
-                row.addEventListener("click", () => {
+                toggleBtn.onclick = () => {
                     productList.classList.toggle("visible");
-                });
+                    toggleBtn.textContent = productList.classList.contains("visible") ? "Hide Products" : "Show Products";
+                };
 
-                // Actions cell
-                const actionCell = row.insertCell();
+                // Add Product button (after product list)
                 const addBtn = document.createElement("button");
                 addBtn.textContent = "Add Product";
                 addBtn.className = "add-product-btn";
-                addBtn.onclick = (e) => {
-                    e.stopPropagation(); // prevent row toggle
+                addBtn.onclick = () => {
                     const productId = prompt("Enter Product ID:");
                     const quantity = prompt("Enter Quantity:");
                     if (productId && quantity) {
                         addProductToInventory(inv.id, productId, quantity);
                     }
                 };
-                actionCell.appendChild(addBtn);
+                invDiv.appendChild(addBtn);
+
+                container.appendChild(invDiv);
             });
         });
 }
