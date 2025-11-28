@@ -62,7 +62,7 @@ function loadInventories() {
                 const productTable = document.createElement("table");
                 productTable.className = "product-list";
                 const headerRow = productTable.insertRow();
-                ["ID", "Product ID", "Quantity"].forEach(col => {
+                ["ID", "Product ID", "Quantity", "Action"].forEach(col => {
                     const th = document.createElement("th");
                     th.textContent = col;
                     headerRow.appendChild(th);
@@ -71,14 +71,31 @@ function loadInventories() {
                 if (inv.products && inv.products.length > 0) {
                     inv.products.forEach(p => {
                         const row = productTable.insertRow();
+
                         row.insertCell().textContent = p.id ?? "";
                         row.insertCell().textContent = p.productId ?? "";
-                        row.insertCell().textContent = p.quantity ?? "";
+
+                        // Editable quantity
+                        const qtyCell = row.insertCell();
+                        const qtyInput = document.createElement("input");
+                        qtyInput.type = "number";
+                        qtyInput.value = p.quantity ?? 0;
+                        qtyInput.style.width = "70px";
+                        qtyCell.appendChild(qtyInput);
+
+                        // Update button
+                        const updateCell = row.insertCell();
+                        const updateBtn = document.createElement("button");
+                        updateBtn.textContent = "Update";
+                        updateBtn.onclick = () => {
+                            updateProductQuantity(p.id, qtyInput.value);
+                        };
+                        updateCell.appendChild(updateBtn);
                     });
                 } else {
                     const row = productTable.insertRow();
                     const cell = row.insertCell();
-                    cell.colSpan = 3;
+                    cell.colSpan = 4;
                     cell.textContent = "No products";
                 }
 
@@ -86,10 +103,12 @@ function loadInventories() {
 
                 toggleBtn.onclick = () => {
                     productTable.classList.toggle("visible");
-                    toggleBtn.textContent = productTable.classList.contains("visible") ? "Hide Products" : "Show Products";
+                    toggleBtn.textContent = productTable.classList.contains("visible")
+                        ? "Hide Products"
+                        : "Show Products";
                 };
 
-                // Add Product form (after product list)
+                // Add Product form
                 const formDiv = document.createElement("div");
                 formDiv.className = "add-product-form";
 
@@ -125,10 +144,15 @@ function loadInventories() {
 
 function addProductToInventory(inventoryId, productId, quantity) {
     api(`/inventory/api/product`, "POST", { inventoryId, productId, quantity })
-        .then(() => {
-            loadInventories(); // reload inventories without full page refresh
-        })
+        .then(() => loadInventories())
         .catch(err => alert("Error adding product: " + err));
+}
+
+// ✅ POST to /inventory/api/quantity
+function updateProductQuantity(id, quantity) {
+    api(`/inventory/api/product/quantity`, "POST", { id, quantity })
+        .then(() => loadInventories())
+        .catch(err => alert("Error updating quantity: " + err));
 }
 </script>
 
