@@ -148,7 +148,6 @@ function addProductToInventory(inventoryId, productId, quantity) {
         .catch(err => alert("Error adding product: " + err));
 }
 
-// ✅ POST to /inventory/api/quantity
 function updateProductQuantity(id, quantity) {
     api(`/inventory/api/product/quantity`, "POST", { id, quantity })
         .then(() => loadInventories())
