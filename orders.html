@@ -118,13 +118,21 @@ function loadOrders() {
 }
 
 function cancelOrder(orderId) {
-    api(`/order/api?_=${Date.now()}`)
-    .then(() => {
-        // Just refresh the table, no alerts
-        loadOrders();
-    });
-
+    api("/order/api/cancel", "POST", { orderId })
+        .then(updatedOrder => {
+            // Find the row for this order
+            const table = document.getElementById("orderTable");
+            for (let i = 1; i < table.rows.length; i++) { // skip header
+                const row = table.rows[i];
+                if (row.cells[0].textContent == orderId) {
+                    row.cells[2].textContent = updatedOrder.status; // update status
+                    row.cells[6].innerHTML = ""; // remove cancel button
+                    break;
+                }
+            }
+        });
 }
+
 
 function addOrder() {
     const productRows = document.querySelectorAll(".product-row");
