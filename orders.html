@@ -66,7 +66,6 @@ function addProductRow() {
 function removeProductRow(btn) {
     btn.parentElement.remove();
 }
-
 function loadOrders() {
     requireAuth();
     api("/order/api")
@@ -80,6 +79,7 @@ function loadOrders() {
                 <th>Total Amount</th>
                 <th>Created At</th>
                 <th>Updated At</th>
+                <th>Actions</th>
             </tr>`;
 
             orders.forEach(o => {
@@ -87,7 +87,6 @@ function loadOrders() {
 
                 row.insertCell().textContent = o.id; // Order ID
 
-                // Items with productName, description, quantity
                 const itemsCell = row.insertCell();
                 itemsCell.innerHTML = o.orderItems.map(i =>
                     `Product: ${i.productName} <br>
@@ -104,7 +103,31 @@ function loadOrders() {
 
                 row.insertCell().textContent = created;  // Created At
                 row.insertCell().textContent = updated;  // Updated At
+
+                const actionCell = row.insertCell();
+
+                // Add Cancel button if status is PENDING
+                if (o.status === "PENDING") {
+                    const cancelBtn = document.createElement("button");
+                    cancelBtn.textContent = "Cancel";
+                    cancelBtn.onclick = () => cancelOrder(o.id);
+                    actionCell.appendChild(cancelBtn);
+                }
             });
+        });
+}
+
+function cancelOrder(orderId) {
+    if (!confirm("Are you sure you want to cancel this order?")) return;
+
+    api("/order/api/cancel", "POST", { orderId })
+        .then(response => {
+            alert("Order cancelled successfully.");
+            loadOrders(); // refresh the table
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Failed to cancel order.");
         });
 }
 
