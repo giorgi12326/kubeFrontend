@@ -31,6 +31,7 @@
         <th>Name</th>
         <th>Description</th>
         <th>Price</th>
+        <th>Quantity</th>
         <th>User ID</th>
         <th>Created At</th>
     </tr>
@@ -53,6 +54,7 @@ function loadProducts() {
                 row.insertCell().textContent = p.name ?? "";
                 row.insertCell().textContent = p.description ?? "";
                 row.insertCell().textContent = p.price ?? "";
+                row.insertCell().textContent = p.quantity ?? "";
                 row.insertCell().textContent = p.userId ?? "";
                 row.insertCell().textContent = p.createdAt ?? "";
 
