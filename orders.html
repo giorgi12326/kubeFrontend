@@ -4,23 +4,44 @@
     <title>Orders</title>
     <script src="api.js"></script>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .product-row { margin-bottom: 5px; }
+        .product-row input { margin-right: 5px; }
+    </style>
 </head>
 <body onload="loadOrders()">
 
 <h2>Orders</h2>
-<button onclick="logout()">Logout</button>
+<button onclick="logout()" style="right:10px;">Logout</button>
 
+<nav>
+    <a href="/products">Products</a>
+    <a href="/orders">Orders</a>
+    <a href="/payments">Payments</a>
+    <a href="/inventories">Inventory</a>
+</nav>
+<br>
 <h3>Create Order</h3>
-<input id="userId" type="number" placeholder="User ID">
-<input id="productId" type="number" placeholder="Product ID">
-<button onclick="addOrder()">Create</button>
+
+<div id="productsContainer">
+    <div class="product-row">
+        <input type="number" placeholder="Product ID" class="productId">
+        <input type="number" placeholder="Quantity" class="quantity">
+        <button type="button" onclick="removeProductRow(this)">Remove</button>
+    </div>
+</div>
+<button type="button" onclick="addProductRow()">Add Another Product</button>
+<button onclick="addOrder()">Create Order</button>
 
 <h3>Order List</h3>
 <table id="orderTable">
     <tr>
         <th>Order ID</th>
-        <th>User ID</th>
-        <th>Product ID</th>
+        <th>Items</th>
+        <th>Status</th>
+        <th>Total Amount</th>
+        <th>Created At</th>
+        <th>Updated At</th>
     </tr>
 </table>
 
@@ -30,26 +51,118 @@ function logout() {
     window.location.href = "/login";
 }
 
+function addProductRow() {
+    const container = document.getElementById("productsContainer");
+    const div = document.createElement("div");
+    div.className = "product-row";
+    div.innerHTML = `
+        <input type="number" placeholder="Product ID" class="productId">
+        <input type="number" placeholder="Quantity" class="quantity">
+        <button type="button" onclick="removeProductRow(this)">Remove</button>
+    `;
+    container.appendChild(div);
+}
+
+function removeProductRow(btn) {
+    btn.parentElement.remove();
+}
 function loadOrders() {
     requireAuth();
     api("/order/api")
         .then(orders => {
             const table = document.getElementById("orderTable");
+            // Reset table
+            table.innerHTML = `<tr>
+                <th>Order ID</th>
+                <th>Items</th>
+                <th>Status</th>
+                <th>Total Amount</th>
+                <th>Created At</th>
+                <th>Updated At</th>
+                <th>Actions</th>
+            </tr>`;
+
             orders.forEach(o => {
                 const row = table.insertRow();
-                row.insertCell().textContent = o.id;
-                row.insertCell().textContent = o.userId;
-                row.insertCell().textContent = o.productId;
+
+                row.insertCell().textContent = o.id; // Order ID
+
+                const itemsCell = row.insertCell();
+                itemsCell.innerHTML = o.orderItems.map(i =>
+                    `Product: ${i.productName} <br>
+                     Description: ${i.productDescription} <br>
+                     Price: ${i.price}<br>
+                     Quantity: ${i.quantity}`
+                ).join("<hr>");
+
+                row.insertCell().textContent = o.status;              // Status
+                row.insertCell().textContent = o.amount.toFixed(2);   // Total Amount
+
+                const created = o.createdAt ? new Date(o.createdAt).toLocaleString() : "-";
+                const updated = o.updatedAt ? new Date(o.updatedAt).toLocaleString() : "-";
+
+                row.insertCell().textContent = created;  // Created At
+                row.insertCell().textContent = updated;  // Updated At
+
+                const actionCell = row.insertCell();
+
+                // Add Cancel button if status is PENDING
+                if (o.status === "PENDING") {
+                    const cancelBtn = document.createElement("button");
+                    cancelBtn.textContent = "Cancel";
+                    cancelBtn.onclick = () => cancelOrder(o.id);
+                    actionCell.appendChild(cancelBtn);
+                }
             });
         });
 }
 
-function addOrder() {
-    const userId = Number(document.getElementById("userId").value);
-    const productId = Number(document.getElementById("productId").value);
+function cancelOrder(orderId) {
+    api("/order/api/cancel", "POST", { orderId })
+        .then(updatedOrder => {
+            // Find the row for this order
+            const table = document.getElementById("orderTable");
+            for (let i = 1; i < table.rows.length; i++) { // skip header
+                const row = table.rows[i];
+                if (row.cells[0].textContent == orderId) {
+                    row.cells[2].textContent = updatedOrder.status; // update status
+                    row.cells[6].innerHTML = ""; // remove cancel button
+                    break;
+                }
+            }
+        });
+}
 
-    api("/order/api", "POST", { userId, productId })
-        .then(() => location.reload());
+
+function addOrder() {
+    const productRows = document.querySelectorAll(".product-row");
+    const orderItems = [];
+
+    productRows.forEach(row => {
+        const productId = Number(row.querySelector(".productId").value);
+        const quantity = Number(row.querySelector(".quantity").value);
+        if (productId && quantity) {
+            orderItems.push({ productId, quantity });
+        }
+    });
+
+    if (orderItems.length === 0) {
+        alert("Please add at least one product with quantity.");
+        return;
+    }
+
+    api("/order/api", "POST", { orderItems })
+        .then(() => {
+            // Reset form
+            document.getElementById("productsContainer").innerHTML = `
+                <div class="product-row">
+                    <input type="number" placeholder="Product ID" class="productId">
+                    <input type="number" placeholder="Quantity" class="quantity">
+                    <button type="button" onclick="removeProductRow(this)">Remove</button>
+                </div>
+            `;
+            loadOrders();
+        });
 }
 </script>
 

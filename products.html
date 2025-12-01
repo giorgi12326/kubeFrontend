@@ -8,18 +8,31 @@
 <body onload="loadProducts()">
 
 <h2>Products</h2>
-<button onclick="logout()">Logout</button>
+<button onclick="logout()" style="right:10px;">Logout</button>
 
+<nav>
+    <a href="/products">Products</a>
+    <a href="/orders">Orders</a>
+    <a href="/payments">Payments</a>
+    <a href="/inventories">Inventory</a>
+</nav>
+<br>
+ 
 <h3>Add Product</h3>
 <input id="name" placeholder="Name">
 <input id="description" placeholder="Description">
+<input id="price" type="number" step="0.01" placeholder="Price">
 <button onclick="addProduct()">Add</button>
 
 <h3>Product List</h3>
 <table id="productTable">
     <tr>
+        <th>ID</th>
         <th>Name</th>
         <th>Description</th>
+        <th>Price</th>
+        <th>Quantity</th>
+        <th>User ID</th>
         <th>Created At</th>
     </tr>
 </table>
@@ -35,12 +48,16 @@ function loadProducts() {
     api("/product/api")
         .then(products => {
             const table = document.getElementById("productTable");
-
             products.forEach(p => {
                 const row = table.insertRow();
-                row.insertCell().textContent = p.name;
+                row.insertCell().textContent = p.id ?? "";
+                row.insertCell().textContent = p.name ?? "";
                 row.insertCell().textContent = p.description ?? "";
+                row.insertCell().textContent = p.price ?? "";
+                row.insertCell().textContent = p.quantity ?? "";
+                row.insertCell().textContent = p.userId ?? "";
                 row.insertCell().textContent = p.createdAt ?? "";
+
             });
         });
 }
@@ -48,8 +65,9 @@ function loadProducts() {
 function addProduct() {
     const name = document.getElementById("name").value;
     const description = document.getElementById("description").value;
+    const price = parseFloat(document.getElementById("price").value);
 
-    api("/product/api", "POST", { name, description })
+    api("/product/api", "POST", { name, description, price})
         .then(() => location.reload());
 }
 </script>

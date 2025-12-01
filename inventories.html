@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventories</title>
+    <script src="api.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .product-list { display: none; margin-top: 10px; margin-left: 20px; }
+        .product-list.visible { display: block; }
+        .inventory-row { border-bottom: 1px solid #ccc; padding: 5px; margin-bottom: 10px; }
+        .inventory-header { font-weight: bold; }
+        .add-product-form { margin-top: 5px; }
+        .add-product-form input { margin-right: 5px; width: 100px; }
+    </style>
+</head>
+<body onload="loadInventories()">
+
+<h2>Inventories</h2>
+<button onclick="logout()" style="float:right;">Logout</button>
+
+<nav>
+    <a href="/products">Products</a>
+    <a href="/orders">Orders</a>
+    <a href="/payments">Payments</a>
+    <a href="/inventories">Inventory</a>
+</nav>
+<br>
+
+<h3>Inventory List</h3>
+<div id="inventoryContainer"></div>
+
+<script>
+function logout() {
+    localStorage.removeItem("jwt");
+    window.location.href = "/login";
+}
+
+function loadInventories() {
+    requireAuth();
+    api("/inventory/api/inventory")
+        .then(inventories => {
+            const container = document.getElementById("inventoryContainer");
+            container.innerHTML = ""; // clear previous
+
+            inventories.forEach(inv => {
+                const invDiv = document.createElement("div");
+                invDiv.className = "inventory-row";
+
+                // Inventory header
+                const header = document.createElement("div");
+                header.className = "inventory-header";
+                header.textContent = `ID: ${inv.id} | Location: ${inv.location} | Created: ${inv.createdAt} | Updated: ${inv.updatedAt}`;
+                invDiv.appendChild(header);
+
+                // Toggle products button
+                const toggleBtn = document.createElement("button");
+                toggleBtn.textContent = "Show Products";
+                toggleBtn.style.marginTop = "5px";
+                invDiv.appendChild(toggleBtn);
+
+                // Products table
+                const productTable = document.createElement("table");
+                productTable.className = "product-list";
+                const headerRow = productTable.insertRow();
+                ["ID", "Product ID", "Quantity", "Action"].forEach(col => {
+                    const th = document.createElement("th");
+                    th.textContent = col;
+                    headerRow.appendChild(th);
+                });
+
+                if (inv.products && inv.products.length > 0) {
+                    inv.products.forEach(p => {
+                        const row = productTable.insertRow();
+
+                        row.insertCell().textContent = p.id ?? "";
+                        row.insertCell().textContent = p.productId ?? "";
+
+                        // Editable quantity
+                        const qtyCell = row.insertCell();
+                        const qtyInput = document.createElement("input");
+                        qtyInput.type = "number";
+                        qtyInput.value = p.quantity ?? 0;
+                        qtyInput.style.width = "70px";
+                        qtyCell.appendChild(qtyInput);
+
+                        // Update button
+                        const updateCell = row.insertCell();
+                        const updateBtn = document.createElement("button");
+                        updateBtn.textContent = "Update";
+                        updateBtn.onclick = () => {
+                            updateProductQuantity(p.id, qtyInput.value);
+                        };
+                        updateCell.appendChild(updateBtn);
+                    });
+                } else {
+                    const row = productTable.insertRow();
+                    const cell = row.insertCell();
+                    cell.colSpan = 4;
+                    cell.textContent = "No products";
+                }
+
+                invDiv.appendChild(productTable);
+
+                toggleBtn.onclick = () => {
+                    productTable.classList.toggle("visible");
+                    toggleBtn.textContent = productTable.classList.contains("visible")
+                        ? "Hide Products"
+                        : "Show Products";
+                };
+
+                // Add Product form
+                const formDiv = document.createElement("div");
+                formDiv.className = "add-product-form";
+
+                const inputProductId = document.createElement("input");
+                inputProductId.placeholder = "Product ID";
+                inputProductId.type = "number";
+
+                const inputQuantity = document.createElement("input");
+                inputQuantity.placeholder = "Quantity";
+                inputQuantity.type = "number";
+
+                const addBtn = document.createElement("button");
+                addBtn.textContent = "Add Product";
+                addBtn.onclick = () => {
+                    const productId = inputProductId.value;
+                    const quantity = inputQuantity.value;
+                    if (!productId || !quantity) {
+                        alert("Fill both fields!");
+                        return;
+                    }
+                    addProductToInventory(inv.id, productId, quantity);
+                };
+
+                formDiv.appendChild(inputProductId);
+                formDiv.appendChild(inputQuantity);
+                formDiv.appendChild(addBtn);
+                invDiv.appendChild(formDiv);
+
+                container.appendChild(invDiv);
+            });
+        });
+}
+
+function addProductToInventory(inventoryId, productId, quantity) {
+    api(`/inventory/api/product`, "POST", { inventoryId, productId, quantity })
+        .then(() => loadInventories())
+        .catch(err => alert("Error adding product: " + err));
+}
+
+function updateProductQuantity(productId, quantity) {
+    api(`/inventory/api/product/quantity`, "POST", { productId, quantity })
+        .then(() => loadInventories())
+        .catch(err => alert("Error updating quantity: " + err));
+}
+</script>
+
+</body>
+</html>
