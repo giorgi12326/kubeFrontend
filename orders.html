@@ -118,7 +118,7 @@ function loadOrders() {
 }
 
 function cancelOrder(orderId) {
-    api("/order/api/cancel", "POST", { orderId })
+    api(`/order/api?_=${Date.now()}`)
     .then(() => {
         // Just refresh the table, no alerts
         loadOrders();
